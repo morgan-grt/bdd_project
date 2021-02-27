@@ -1,0 +1,20 @@
+pour lancer le container:
+docker exec -it bdd_mongo_1 bash
+
+pour entrer dans la bdd:
+mongo --authenticationDatabase admin -u root -p example
+
+exit
+
+run gui:
+docker volume create portainer_data
+docker run -d -p 8000:8000 -p 9000:9000 --name=portainer --restart=always -v /var/run/docker.sock:/var/run/docker.sock -v portainer_data:/data portainer/portainer-ce
+
+jq -c . data_pays_2000-2020.json | docker exec -i dm_bdd_mongo_1 sh -c 'mongoimport -d weather_db --jsonArray -c weather --authenticationDatabase admin -u root -p example'
+
+db.weather.find().forEach(function(element) {
+element.date = new Date(element.date);
+db.date.save(element);
+})
+
+git pull #9cbef11163ae1108cbc9d2a3dd11a553a5954695

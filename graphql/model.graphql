@@ -1,0 +1,25 @@
+scalar JSON
+scalar DateTime
+
+type Item{
+    date: DateTime
+    city: String
+    country: String
+    prcp: Float
+    snwd: Float
+    tmax: Float
+    tmin: Float
+    tavg: Float
+}
+
+type Query {
+    Weathers: [Item]
+    Country(country: String): [Item]
+    Countrys(country: [String]): [Item]
+    Distinct(row: String): [String]
+    City(city: String): [Item]
+    Citys(city: [String]): [Item]
+    Custom(city: String, country: String, date: String): [Item]
+    Range(sortBy: [String], sortMethod: [Int], limit: Int, skip: Int): [Item]
+    CountItem: Int
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<!--
+To change this license header, choose License Headers in Project Properties.
+To change this template file, choose Tools | Templates
+and open the template in the editor.
+-->
+<html>
+    <head>
+        <title>Meteo</title>
+        <meta charset="UTF-8">
+        <script type="text/javascript" src="/js/jquery-3.5.1.min.js"></script>
+        <script type="text/javascript" src="/js/d3.min.js"></script>
+        <link rel="stylesheet" href="/css/bootstrap_superhero.css"/>
+        <link rel="stylesheet" href="/css/bootstrap_adjustment.css"/>
+        <link rel="stylesheet" href="/css/basic.css"/>
+        <link rel="icon" href="/img/favicon.ico" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body>
+        <header id="header">
+            <ul class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link" href="/">Accueil</a>
+                </li><!--
+                --><li class="nav-item">
+                    <a class="nav-link active" href="/table">Tableau</a>
+                </li><!--
+                --><li class="nav-item">
+                    <a class="nav-link" href="/graph">Graphe</a>
+                </li>
+            </ul>
+        </header>
+        <div id="wrapper">
+            <div id="content"></div>
+            <div id="manage-button">
+                <button class="btn btn-secondary" onclick="getBeforeReset();">begin</button><!--
+                --><button class="btn btn-secondary" onclick="getBefore(1000);"><<<</button><!--
+                --><button class="btn btn-secondary" onclick="getBefore(100);"><<</button><!--
+                --><button class="btn btn-secondary" onclick="getBefore();"><</button><!--
+                --><button class="btn btn-secondary" onclick="getAfter();">></button><!--
+                --><button class="btn btn-secondary" onclick="getAfter(100);">>></button><!--
+                --><button class="btn btn-secondary" onclick="getAfter(1000);">>>></button><!--
+                --><button class="btn btn-secondary" onclick="getAfterReset();">end</button><!--
+                --><select class="custom-select custom-select-adjustment" onChange="updateSortLimit(this.value);" id="number-to-show" name="number-to-show">
+                  <option value="10">10</option>
+                  <option value="20">20</option>
+                  <option value="50">50</option>
+                  <option value="100">100</option>
+                </select><!--
+                --><input class="form-control custom-input" onChange="updateSortLimit(this.value);" type="text" name='number-to-show'>
+            </div>
+        </div>
+        <footer id="footer">
+        </footer>
+    </body>
+
+    <script type="text/javascript" src="js/table.js"></script>
+</html>
