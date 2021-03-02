@@ -22,24 +22,6 @@ function updateMongodbSize(root)
 
 getMongodbSize();
 
-function queryRange(sortBy, sortMethod, limit, skip) 
-{
-
-    let sort;
-    if (sortBy != "" && sortMethod != "") 
-    {
-        sort = `sortBy:"${sortBy}",sortMethod:${sortMethod},`;
-    }
-    else
-    {
-        sort = "";
-    }
-
-    return `{Range (${sort}`
-        + `limit:${limit},skip:${skip})`
-        + `{date,country,city,prcp,snwd,tavg,tmax,tmin}}`;
-}
-
 function sortByCity() {updateSortValues(0)}
 function sortByCountry() {updateSortValues(1)}
 function sortByDate() {updateSortValues(2)}

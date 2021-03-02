@@ -45,7 +45,7 @@
 	text-align: center;
 	background-color: #df691a;
 	margin-bottom: 30px;
-	box-shadow: 0px 15px 25px -10px #000000
+	box-shadow: rgb(0, 0, 0) 0px 5px 10px 0px;
 }
 
 .nav-item {

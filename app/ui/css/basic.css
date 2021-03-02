@@ -9,7 +9,7 @@
 }
 
 #div-table {
-	box-shadow: 0px 5px 20px 5px #000000;
+	box-shadow: rgb(0, 0, 0) 0px 5px 10px 0px;
 	margin: auto;
 	background-color: #df691a;
 	margin-bottom: 30px;
@@ -33,4 +33,53 @@
 #manage-button {
 	width: max-content;
 	margin: auto;
+}
+
+
+
+.x.axis path {
+	display: none;
+}
+
+.line {
+	fill: none;
+	stroke: steelblue;
+	stroke-width: 4px;
+}
+
+.overlay {
+    fill: none;
+  	pointer-events: all;
+}
+
+.grid line {
+	stroke: lightgrey;
+	stroke-opacity: 0.2;
+}
+
+.grid path {
+  	stroke-width: 0;
+}
+
+.axis path,
+.axis line {
+	fill: none;
+	stroke: grey;
+	stroke-width: 0.5;
+}
+
+.focus circle {
+	fill: none;
+	stroke: #fff;
+	stroke-width: 2px;
+}
+  
+.hover-line {
+	stroke: #000;
+	stroke-width: 0.5px;
+	stroke-dasharray: 4,3;
+}
+
+.x line, .y line {
+	stroke-width: 0.3px;
 }
