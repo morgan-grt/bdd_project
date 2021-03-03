@@ -69,8 +69,8 @@ function drawGraph(datas)
 
     // set the dimensions and margins of the graph
     const margin = {top: 30, right: 100, bottom: 30, left: 50},
-        width = 960 - margin.left - margin.right,
-        height = 500 - margin.top - margin.bottom;
+        width = 1080 - margin.left - margin.right,
+        height = 720 - margin.top - margin.bottom;
 
     // parse the date / time
     const parseTime = d3.timeParse("%Y-%m-%d");
@@ -87,7 +87,7 @@ function drawGraph(datas)
     console.log(datas)
 
 
-    var color = d3.scaleOrdinal(d3.schemeDark2);
+    var color = d3.scaleOrdinal(d3.schemeSet2);
 
     var data = datas.data.Multiple;
     var dataNested = [];
@@ -164,17 +164,50 @@ function drawGraph(datas)
         .call(yAxis);
 
 
+    // CREATE LEGEND //
+    var legendTextX = 80
+    var legendTextY = 0
+    var legendX = 20
+    var legendY = -20
 
+    var svgLegend = svg.append('g')
+        .attr('class', 'gLegend')
+        .attr("transform", "translate(" + legendX + "," + legendY + ")")
+
+
+    var legend = svgLegend.selectAll('.legend')
+        .data(dataNested)
+        .enter().append('g')
+        .attr("class", "legend")
+        .attr("transform", function (d, i) 
+        {   
+            return "translate(" +  i * legendTextX + "," + i * legendTextY + ")"
+        })
+
+    legend.append("circle")
+        .attr("class", "legend-node")
+        .attr("cx", 0)
+        .attr("cy", 0)
+        .attr("r", 6)
+        .style("fill", d=>color(d.key))
+
+    legend.append("text")
+        .attr("class", "legend-text")
+        .attr("x", 6 * 2)
+        .attr("y", 6)
+        .style("fill", "#A9A9A9")
+        .style("font-size", 12)
+        .text(d=>d.key)
 
     
 
-    let glines = svg.selectAll('.line-group')
+    let dataLines = svg.selectAll('.line-group')
         .data(dataNested)
         .enter()
         .append("g")
         .attr("class", "line-group")
 
-    glines.append('path')
+    dataLines.append('path')
         .attr('class', 'line')  
         .attr('d', function(d) { return line(d.values); })
         .style("stroke", function(d){ return color(d.key) })
@@ -182,37 +215,44 @@ function drawGraph(datas)
         .attr("stroke-width", 1.5)
     
 
-    var mouseG = svg.append("g")
+    var tooltipLine = svg.append("g")
         .attr("class", "mouse-over-effects");
 
-    mouseG.append("path") // this is the black vertical line to follow mouse
+    tooltipLine.append("path") // this is the black vertical line to follow mouse
         .attr("class", "mouse-line")
-        .style("stroke", "black")
+        .style("stroke", "rgb(26, 25, 24)")
         .style("stroke-width", "1px")
+        .style("stroke-dasharray", "4px")
         .style("opacity", "0");
       
     var lines = document.getElementsByClassName('line');
 
-    var mousePerLine = mouseG.selectAll('.mouse-per-line')
+    var tooltipLineCircle = tooltipLine.selectAll('.tooltip-line-circle')
         .data(dataNested)
         .enter()
         .append("g")
-        .attr("class", "mouse-per-line");
+        .attr("class", "tooltip-line-circle");
 
-    mousePerLine.append("circle")
-        .attr("r", 4)
+    tooltipLineCircle.append("circle")
+        .attr("r", 3)
         .style("stroke", function(d) { return color(d.key); })
-        .style("fill", "none")
+        .style("fill", function(d) { return color(d.key); })
         .style("stroke-width", "1px")
-        .style("opacity", "0");
+        .style("opacity", "1")
+        .attr("visibility", "hidden");
 
-    mousePerLine.append("text")
+    tooltipLineCircle.append("circle")
+        .attr("r", 5)
+        .style("stroke", function(d) { return color(d.key); })
+        .style("fill", function(d) { return color(d.key); })
+        .style("stroke-width", "1px")
+        .style("opacity", "0.5")
+        .attr("visibility", "hidden");
+
+    tooltipLineCircle.append("text")
         .attr("transform", "translate(10,3)");
 
-    /*var tooltip = svg.append("g")
-        .attr("id", "tooltip")
-        .style("opacity", "0")
-    */
+    
 
     var tooltip = d3.select("#content").append("div")
         .attr('id', 'tooltip-div')
@@ -221,7 +261,8 @@ function drawGraph(datas)
         .style('padding', 6)
         .style('display', 'none')
         .style("width", "150px")
-        .style("opacity", "0.7")
+        .style("opacity", "0.8")
+        .style("z-index", "2")
         .style("box-shadow", "rgb(0, 0, 0) 0px 5px 10px 0px")
         .style("color", "#fff")
         .style("background-color", "rgb(41, 45, 47)")
@@ -253,142 +294,114 @@ function drawGraph(datas)
             .style("margin", "0")
             .style("margin-left", "15px")
             .style("text-align", "left")
-            //.attr("dx", "-75")
-            //.attr("dy", 10 + 5 * i)
+
             .text("●");
-    
-        // Le texte pour la valeur de l'or à la date sélectionnée
-        text.append("tspan")
-            
-            .attr("dx", "10")
-            .attr("dy", 2 + 10 * i)
-            .style("font-weight", "bold");
+
     }, Object.create(null));
     
     // Positionnement spécifique pour le petit rond bleu
     
+    bisect = d3.bisector(function(d) { return d.date; }).right;
 
-
-    mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
-        .attr('width', width) // can't catch mouse events on a g element
-        .attr('height', height)
-        .attr('fill', 'none')
-        .attr('pointer-events', 'all')
+    tooltipLine.append("svg:rect") // append a rect to catch mouse movements on canvas
+        .attr("width", width) // can't catch mouse events on a g element
+        .attr("height", height)
+        .attr("fill", "none")
+        .attr("position", "absolute")
+        .attr("z-index", 1)
+        .attr("pointer-events", "all")
         .on('mouseout', function() { // on mouse out hide line, circles and text
             d3.select(".mouse-line")
                 .style("opacity", "0");
-            d3.selectAll(".mouse-per-line circle")
-                .style("opacity", "0");
-            d3.selectAll(".mouse-per-line text")
-                .style("opacity", "0");
+            d3.selectAll(".tooltip-line-circle circle")
+                .attr("visibility", "hidden");
             d3.select("#tooltip-div")
                 .style("display", "none");
         })
         .on('mouseover', function() { // on mouse in show line, circles and text
             d3.select(".mouse-line")
                 .style("opacity", "1");
-            d3.selectAll(".mouse-per-line circle")
-                .style("opacity", "1");
-            d3.selectAll(".mouse-per-line text")
-                .style("opacity", "1");
+            d3.selectAll(".tooltip-line-circle circle")
+                .attr("visibility", "visible");
             d3.select("#tooltip-div")
                 .style("display", "block");
         })
         .on('mousemove', function(e) { // mouse moving over canvas
-            var mouse = d3.pointer(e);
-            d3.select(".mouse-line")
-                .attr("d", function() {
-                    var d = "M" + mouse[0] + "," + height;
-                    d += " " + mouse[0] + "," + 0;
-                    return d;
-                });
+            let mouse = d3.pointer(e);
 
-            d3.selectAll(".mouse-per-line")
-                .attr("transform", function(d, i) {
-                    var xDate = x.invert(mouse[0]),
-                    bisect = d3.bisector(function(d) { return d.date; }).right;
-                    idx = bisect(dataNested.values, xDate);
-            
-                    var beginning = 0,
+            let xDate = x.invert(mouse[0])
+            closestElement = bisect(data, xDate, 1), 
+            d0 = data[closestElement - 1],
+            d1 = closestElement < data.length ? data[closestElement] : data[closestElement - 1],
+            dx = xDate - d0.date > d1.date - xDate ? d1 : d0;
+
+            d3.select('#tooltip-date')
+                    .text(dateFormat(dx.date));
+
+            let tootltipX = (mouse[0] > width - 170) 
+                ? mouse[0] - 170 
+                : mouse[0] + 2 * margin.left;
+
+            let tootltipY = mouse[1] + 2 * margin.top;
+
+            tooltip.style('display', 'block')
+                .style('left', tootltipX + "px")
+                .style('top', tootltipY + "px");
+
+            d3.selectAll(".tooltip-line-circle")
+                .attr("transform", function(d, i) 
+                {
+                    let xDate = x.invert(mouse[0]);
+                    closestElement = bisect(d.values, xDate, 1)
+                    d0 = d.values[closestElement - 1]
+                    d1 = closestElement < d.values.length ? d.values[closestElement] : d.values[closestElement - 1]
+                    dx = xDate - d0.date > d1.date - xDate ? d1 : d0;
+                    
+                    let beginning = 0,
                     end = lines[i].getTotalLength(),
-                    target = null;
+                    target = null,
+                    pos,
+                    xValue,
+                    yValue;
 
-                    while (true){
-                        target = Math.floor((beginning + end) / 2);
-                        pos = lines[i].getPointAtLength(target);
-                        if ((target === end || target === beginning) && pos.x !== mouse[0]) 
-                        {
-                            break;
+                    if (sortLimit >= 500)
+                    {
+                        xValue = x(dx.date);
+                        yValue = y(dx.tavg);
+                    }
+                    else
+                    {
+                        while (true){
+                            target = Math.floor((beginning + end) / 2);
+                            pos = lines[i].getPointAtLength(target);
+                            if ((target === end || target === beginning) && pos.x !== mouse[0]) 
+                            {
+                                break;
+                            }
+                            if (pos.x > mouse[0])      end = target;
+                            else if (pos.x < mouse[0]) beginning = target;
+                            else break; //position found
+
                         }
-                        if (pos.x > mouse[0])      end = target;
-                        else if (pos.x < mouse[0]) beginning = target;
-                        else break; //position found
 
+                        xValue = pos.x;
+                        yValue = pos.y;
                     }
 
-                    closestElement = bisect(data, xDate, 1), 
-                        d0 = data[closestElement - 1],
-                        d1 = closestElement < data.length ? data[closestElement] : data[closestElement - 1],
-                        dx = xDate - d0.date > d1.date - xDate ? d1 : d0;
-
-                    d3.select('#tooltip-date')
-                            .text(dateFormat(dx.date));
-
-
                     d3.select('#tooltip-tavg-' + d.key)
-                        .text("● " + d.key + "  :  " + y.invert(pos.y).toFixed(2) + " °C");
+                        .text("● " + d.key + "  :  " + y.invert(yValue).toFixed(2) + " °C");
 
-
-                    let tootltipX = (mouse[0] > width - 170) 
-                        ? mouse[0] - 170 
-                        : mouse[0] + 2 * margin.left;
-
-                    let tootltipY = mouse[1] + 2 * margin.top;
-
-                    tooltip.style('display', 'block')
-                        .style('left', tootltipX + "px")
-                        .style('top', tootltipY + "px")
-
+                    d3.select(".mouse-line")
+                    .attr("d", function() 
+                    {
+                        var d = "M" + xValue + "," + height;
+                        d += " " + xValue + "," + 0;
+                        return d;
+                    });
                   
-                    return "translate(" + mouse[0] + "," + pos.y +")";
+                    return "translate(" + xValue + "," + yValue +")";
                 })
         });
-
-
-    /*
-    function mousemove(e) {
-        let pointer = d3.pointer(e);
-        let x0 = x.invert(pointer[0]),
-            closestElement = bisectDate(data, x0, 1), //<-- use the bisector to search the array for the closest point to the left and find that point given our mouse position
-            d0 = data[closestElement - 1],
-            d1 = data[closestElement],
-            d = x0 - d0.date > d1.date - x0 ? d1 : d0;
-
-        let polylineX = (pointer[0] > width - 200) ? pointer[0] - 200 : pointer[0] + margin.left;
-        let tooltipText = (pointer[0] > width - 200) ? pointer[0] - 200 + 20 : pointer[0] + margin.left + 20;
-
-
-        tooltip
-            .select(".polyline")
-            .attr("transform", "translate(" + polylineX + "," + pointer[1] + ")");
-        tooltip
-            .select("#tooltip-text")
-            .attr("transform", "translate(" + tooltipText + "," + (pointer[1] + 15) + ")");
-        
-        tooltipCursor.attr("transform", "translate(" + x(d.date) + "," + y(d.tavg) + ")");
-
-        
-        
-        tooltipCursor.select(".x-hover-line").attr("y1", -height + (height - y(d.tavg)));
-        tooltipCursor.select(".x-hover-line").attr("y2", height -  y(d.tavg));
-
-        d3.select('#tooltip-date')
-            .text(dateFormat(d.date));
-        d3.select('#tooltip-tavg')
-            .text(d.tavg + "°C");
-    }
-    */
-
 }
 
 query();
