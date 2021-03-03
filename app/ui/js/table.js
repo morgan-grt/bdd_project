@@ -7,11 +7,14 @@ let sortSkip = 0;
 let sortSkipNumber = 10;
 let buttonTableCountry;
 
+let hostname = "192.168.1.15"
+let port = "4000"
+
 function getMongodbSize()
 {
     let query = `{CountItem}`;
 
-    d3.json(`http://localhost:4000/?query=${query}`)
+    d3.json(`http://${hostname}:${port}/?query=${query}`)
             .then(updateMongodbSize);
 }
 
@@ -152,7 +155,7 @@ function query()
         + `limit:${sortLimit},skip:${sortSkip})`
         + `{date,country,city,prcp,snwd,tavg,tmax,tmin}}`;
 
-    d3.json(`http://localhost:4000/?query=${query}`)
+    d3.json(`http://${hostname}:${port}/?query=${query}`)
             .then(drawTable);
 }
 

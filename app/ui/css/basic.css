@@ -41,24 +41,9 @@
 	display: none;
 }
 
-.line {
-	fill: none;
-	stroke: steelblue;
-	stroke-width: 4px;
-}
-
 .overlay {
     fill: none;
   	pointer-events: all;
-}
-
-.grid line {
-	stroke: lightgrey;
-	stroke-opacity: 0.2;
-}
-
-.grid path {
-  	stroke-width: 0;
 }
 
 .axis path,
@@ -72,12 +57,6 @@
 	fill: none;
 	stroke: #fff;
 	stroke-width: 2px;
-}
-  
-.hover-line {
-	stroke: #000;
-	stroke-width: 0.5px;
-	stroke-dasharray: 4,3;
 }
 
 .x line, .y line {

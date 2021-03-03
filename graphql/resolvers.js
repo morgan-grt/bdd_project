@@ -6,7 +6,7 @@ const { GraphQLDateTime } = require('graphql-iso-date')
 // Connection URL
 //const url = 'mongodb://root:example@mongodb:27017';
 //const url = 'mongodb://root:example@127.0.0.1:27017';
-const url = 'mongodb://root:example@172.18.0.3:27017';
+const url = 'mongodb://root:example@172.18.0.2:27017';
 
 // Database Name
 const dbName = 'weather_db';
@@ -205,6 +205,61 @@ const resolvers = {
             else{skip = 0;}
 
             query = args;
+            console.log(query, sorting, limit, skip);
+
+            return new Promise((resolve, reject) => {
+                const db = client.db(dbName);
+                paginationDocuments(db, 'weather', query, sorting, limit, skip, resolve);
+            }).then(result => {
+                return result
+            });
+        },
+        Multiple(root, args, context) 
+        {
+            console.log(args);
+            let sorting = {}, limit, skip, query, tmp;
+            
+            if ("sortBy" in args && "sortMethod" in args)
+            {
+                for (index in args.sortBy)
+                {
+                    if (args.sortBy[index] != undefined && args.sortMethod[index] != undefined)
+                    {
+                        sorting[args.sortBy[index]] = args.sortMethod[index];
+                    }
+                    else{ sorting[args.sortBy[index]] = args.sortMethod[0]; }
+                }
+                delete args.sortBy;
+                delete args.sortMethod;
+            }
+            else{sorting = {"date": 1};}
+
+            if ("limit" in args)
+            {
+                limit = args.limit;
+                delete args.limit;
+            }
+            else{limit = 10;}
+
+            if ("skip" in args)
+            {
+                skip = args.skip;
+                delete args.skip;
+            }
+            else{skip = 0;}
+
+            if ("city" in args)
+            {   
+                tmp = '{"city": {"$in": ['
+                for (index in args.city)
+                {
+                    tmp += `"${args.city[index]}"`
+                    if (index < args.city.length - 1){ tmp += ","; }
+                }
+                tmp += ']}}';
+                query = JSON.parse(tmp);
+            }
+
             console.log(query, sorting, limit, skip);
 
             return new Promise((resolve, reject) => {

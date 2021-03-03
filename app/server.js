@@ -2,6 +2,7 @@ const express = require('express')
 const app = express();
 const path = require("path");
 const port = 80
+const hostname = '0.0.0.0';
 
 // Static Files
 app.use(express.static('ui'));
@@ -28,4 +29,4 @@ app.get('/graph', (req, res) => {
 	res.render('graph');
 });
 
-app.listen(port, () => console.info(`🚀 App listening on port ${port}`));
+app.listen(port, hostname, () => console.info(`🚀 App listening on port ${port}`));

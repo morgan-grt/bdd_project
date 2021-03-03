@@ -2,15 +2,20 @@ let mongodbSize;
 let sortCountry = 0;
 let sortCity = 1;
 let sortDate = 1;
-let sortLimit = 3*300;
+let sortLimit = 1*50*4;
 let sortSkip = 0;
 let sortSkipNumber = 10;
+let defaultCity = "CAEN"
+let columns = ["country", "city", "date", "prcp", "snwd", "tavg", "tmax", "tmin"];
+
+let hostname = "192.168.1.15"
+let port = "4000"
 
 function getMongodbSize()
 {
     let query = `{CountItem}`;
 
-    d3.json(`http://localhost:4000/?query=${query}`)
+    d3.json(`http://${hostname}:${port}/?query=${query}`)
             .then(updateMongodbSize);
 }
 
@@ -21,76 +26,13 @@ function updateMongodbSize(root)
 
 getMongodbSize();
 
-function sortByCity() {updateSortValues(0)}
-function sortByCountry() {updateSortValues(1)}
-function sortByDate() {updateSortValues(2)}
-
 function updateSortLimit(newLimit)
 {
     sortLimit = newLimit;
-    updateSortValues()
 }
 
-function updateSortValues(sortIndex = -1, button="")
-{
-    switch(sortIndex)
-    {
-        case 0:
-            switch (sortCity){
-                case 0:
-                    sortCity = 1; 
-                    break;
-                case 1:
-                    sortCity = -1; 
-                    break;
-                case -1:
-                    sortCity = 0; 
-                    break;
-                default:
-                    sortCity = 0;
-                    break;
-            }
-            break;
-        case 1:
-            switch (sortCountry){
-                case 0:
-                    sortCountry = 1; 
-                    break;
-                case 1:
-                    sortCountry = -1; 
-                    break;
-                case -1:
-                    sortCountry = 0; 
-                    break;
-                default:
-                    sortCountry = 0;
-                    break;
-            }
-            break;
-        case 2:
-            switch (sortDate){
-                case 0:
-                    sortDate = 1; 
-                    break;
-                case 1:
-                    sortDate = -1; 
-                    break;
-                case -1:
-                    sortDate = 0; 
-                    break;
-                default:
-                    sortDate = 0;
-                    break;
-            }
-            break;
-        default:
-            break;
-    }
 
-    query();
-}
-
-function query()
+function query(city = defaultCity)
 {
     let sorting = "sortBy:[";
     let sortingMethod = "sortMethod:[";
@@ -114,20 +56,19 @@ function query()
     sorting += "]";
     sortingMethod += "]";
 
-    let query = `{Range(${sorting},${sortingMethod},`
-        + `limit:${sortLimit},skip:${sortSkip}, city:"SEVILLA")`
+    let query = `{Multiple(${sorting},${sortingMethod},`
+        + `limit:${sortLimit},skip:${sortSkip}, city:["${city}", "SEVILLA","PARIS", "NICE"])`
         + `{date,country,city,prcp,snwd,tavg,tmax,tmin}}`;
 
-    d3.json(`http://localhost:4000/?query=${query}`)
+    d3.json(`http://${hostname}:${port}/?query=${query}`)
             .then(drawGraph);
 }
 
-function drawGraph(d) 
+function drawGraph(datas) 
 {
-    columns = ["country", "city", "date", "prcp", "snwd", "tavg", "tmax", "tmin"];
 
     // set the dimensions and margins of the graph
-    const margin = {top: 30, right: 50, bottom: 30, left: 50},
+    const margin = {top: 30, right: 100, bottom: 30, left: 50},
         width = 960 - margin.left - margin.right,
         height = 500 - margin.top - margin.bottom;
 
@@ -143,181 +84,285 @@ function drawGraph(d)
         .append("g")
         .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
-    function createTooltipCursor() 
-    {
-        // Création d'un groupe qui contiendra tout le tooltip plus le cercle de suivi
-        let tooltipCursor = svg.append("g")
-            .attr("id", "tooltip-cursor")
-            .style("display", "none");
-        
-        // Le cercle extérieur bleu clair
-        tooltipCursor.append("circle")
-            .attr("stroke", "#3498db")
-            .attr("fill", "none")
-            .attr("r", 4);
+    console.log(datas)
 
-        tooltipCursor.append("line")
-            .attr("class", "x-hover-line hover-line")
-            .attr("y1", height)
-            .attr("y2", height);
 
-        tooltipCursor.append("line")
-            .attr("class", "y-hover-line hover-line")
-            .attr("x1", width)
-            .attr("x2", width);
+    var color = d3.scaleOrdinal(d3.schemeDark2);
 
-        return tooltipCursor;
-    } 
+    var data = datas.data.Multiple;
+    var dataNested = [];
 
-    function createTooltip() 
-    {
-        let tooltip = svg.append("g")
-            .attr("id", "tooltip")
-            .style("display", "none");
+    data.forEach(function (d) {
+        if (!this[d.city]) 
+        {
+            this[d.city] = { key: d.city, values: [] };
+            dataNested.push(this[d.city]);
+        }
+        this[d.city].values.push({ date: parseTime(d.date), tavg: d.tavg });
+    }, Object.create(null));
 
-        tooltip.append("rect")
-            .attr("class", "polyline")
-            .attr("width", "120")
-            .attr("height", "40")
-            .style("fill", "#fafafa")
-            .style("stroke","#3498db")
-            .style("opacity","0.9")
-            .style("stroke-width","1")
-        
-        // Cet élément contiendra tout notre texte
-        let text = tooltip.append("text")
-            .attr("id", "tooltip-text")
-            .style("font-size", "13px")
-            .style("color", "#333333")
-            .style("fill", "#333333")
-        
-        // Element pour la date avec positionnement spécifique
-        text.append("tspan")
-            .attr("dx", "-5")
-            .attr("id", "tooltip-date");
-        
-        // Positionnement spécifique pour le petit rond bleu
-        text.append("tspan")
-            .style("fill", "#3498db")
-            .attr("dx", "-60")
-            .attr("dy", "15")
-            .text("●");
-        
-        // Le texte pour la valeur de l'or à la date sélectionnée
-        text.append("tspan")
-            .attr("id", "tooltip-tavg")
-            .attr("dx", "10")
-            .attr("dy", "0")
-            .style("font-weight", "bold");
-    
-        return tooltip;
-    }
-
-    var data = d.data.Range;   
 
     // format the data
     data.forEach(function(d) {
-        if (d.tavg == null || d.date == null){
-            let index = data.indexOf(d);
+        d.date = parseTime(d.date);
+        d.tavg = +d.tavg;
+    });
 
-            d.date = parseTime(d.date);
-            d.tavg = +data[index].tavg;
-        }
-        else{
-            d.date = parseTime(d.date);
-            d.tavg = +d.tavg;
-        }
-    });    
+    let res = data.map(function(d){ return d.key })
+    color.domain(res);
 
-    /*// Scale the range of the data
-    x.domain(d3.extent(data, function(d) { return d.date; }));
+    const x = d3.scaleTime().range([0, width]);
+    const y = d3.scaleLinear().range([height, 0]);
+
+    x.domain(d3.extent(data, function(d) { return d.date; }))
     y.domain([
-        d3.min(data, 
-        function(d) { return d.tavg; }) * 2.050, 
-        d3.max(data, 
-        function(d) { return d.tavg; }) * 1.050]);   */
-
+        d3.min(dataNested, function(c) {
+            return d3.min(c.values, function(v) {
+                return nearest(v.tavg);
+            });
+        }),
+        d3.max(dataNested, function(c) {
+            return d3.max(c.values, function(v) {
+                return nearest(v.tavg);
+            });
+        })
+    ]);
     
-    let axisPad = 6
-
-    let x = d3.scaleTime()
-          .domain(d3.extent(data, function(d) { return d.date; }))
-          .range([0, width])
-
-    let y = d3.scaleLinear()
-      .domain([nearest(d3.min(data, d => d.tavg)), nearest(d3.max(data, d => d.tavg))])
-      .range([height, 0]);
-
-    let xAxis = d3.axisBottom(x)
-        .ticks(10)
-        .tickSize(-height)
-    
-    let yAxis = d3.axisLeft(y)
-        .ticks(10)
-        .tickSize(-width)
-        .tickFormat(function(d) {return d + "°C";})
 
     function nearest(x) {
         if (x < 0) {
             return Math.floor(x / 2) * 2
         }
         else {
-            return Math.round(x / 3) * 3
+            return Math.ceil(x / 3) * 3
         }
     }
 
     const line = d3.line()
         .curve(d3.curveCardinal)   
-        .x(d => x(d.date))
-        .y(d => y(d.tavg)); 
+        .x(function(d) { return x(d.date); })
+        .y(function(d) { return y(d.tavg); }); 
 
     // Add the X Axis
+    let xAxis = d3.axisBottom(x)
+        .ticks(10)
+        .tickSize(-height);
+
     svg.append("g")
         .attr("class", "x axis")
         .attr("transform", "translate(0," + height + ")")
         .call(xAxis);
 
     // Add the Y Axis
+    let yAxis = d3.axisLeft(y)
+        .ticks(10)
+        .tickSize(-width)
+        .tickFormat(function(d) { return d + "°C"; });
+
     svg.append("g")
         .attr("class", "y axis")
         .call(yAxis);
 
-    let linePath = svg.append("path")
-        .datum(data)
+
+
+
+    
+
+    let glines = svg.selectAll('.line-group')
+        .data(dataNested)
+        .enter()
+        .append("g")
+        .attr("class", "line-group")
+
+    glines.append('path')
+        .attr('class', 'line')  
+        .attr('d', function(d) { return line(d.values); })
+        .style("stroke", function(d){ return color(d.key) })
+        .attr("fill", "none")
+        .attr("stroke-width", 1.5)
+    
+
+    var mouseG = svg.append("g")
+        .attr("class", "mouse-over-effects");
+
+    mouseG.append("path") // this is the black vertical line to follow mouse
+        .attr("class", "mouse-line")
+        .style("stroke", "black")
+        .style("stroke-width", "1px")
+        .style("opacity", "0");
+      
+    var lines = document.getElementsByClassName('line');
+
+    var mousePerLine = mouseG.selectAll('.mouse-per-line')
+        .data(dataNested)
+        .enter()
+        .append("g")
+        .attr("class", "mouse-per-line");
+
+    mousePerLine.append("circle")
+        .attr("r", 4)
+        .style("stroke", function(d) { return color(d.key); })
         .style("fill", "none")
-        .style("stroke", "#3498db")
-        .style("stroke-width", "2px")
-        .style("opacity", "0.6")
-        .attr("d", line);
+        .style("stroke-width", "1px")
+        .style("opacity", "0");
 
-    let tooltipCursor = createTooltipCursor();
-    let tooltip = createTooltip();
+    mousePerLine.append("text")
+        .attr("transform", "translate(10,3)");
 
-    let bisectDate = d3.bisector(d => d.date).left;
+    /*var tooltip = svg.append("g")
+        .attr("id", "tooltip")
+        .style("opacity", "0")
+    */
 
-    svg.append("rect")
-        .attr("class", "overlay")
-        .attr("width", width)
-        .attr("height", height)
-        .on("mouseover", function() { 
-            tooltipCursor.style("display", null);
-            tooltip.style("display", null);
+    var tooltip = d3.select("#content").append("div")
+        .attr('id', 'tooltip-div')
+        .style('position', 'absolute')
+        .style("background-color", "#D3D3D3")
+        .style('padding', 6)
+        .style('display', 'none')
+        .style("width", "150px")
+        .style("opacity", "0.7")
+        .style("box-shadow", "rgb(0, 0, 0) 0px 5px 10px 0px")
+        .style("color", "#fff")
+        .style("background-color", "rgb(41, 45, 47)")
+        .style("height", function(d) 
+            { 
+                return 20 * (Object.keys(dataNested).length + 1) + "px";
+            })
+        
+    // Cet élément contiendra tout notre texte
+    let text = tooltip.append("text")
+        .attr("id", "tooltip-text")
+        .style("font-size", "13px")
+        //.style("color", "#333333")
+        .style("fill", "#333333");
+    
+    // Element pour la date avec positionnement spécifique
+    text.append("p")
+        .attr("dx", "20")
+        .style("margin", "0")
+        .style("text-align", "center")
+        .attr("id", "tooltip-date");
+
+    dataNested.forEach(function (d, i) {
+        console.log(i)
+        console.log(color(d.key))
+        text.append("p")
+            .attr("id", "tooltip-tavg-" + d.key)
+            .style("color", color(d.key))
+            .style("margin", "0")
+            .style("margin-left", "15px")
+            .style("text-align", "left")
+            //.attr("dx", "-75")
+            //.attr("dy", 10 + 5 * i)
+            .text("●");
+    
+        // Le texte pour la valeur de l'or à la date sélectionnée
+        text.append("tspan")
+            
+            .attr("dx", "10")
+            .attr("dy", 2 + 10 * i)
+            .style("font-weight", "bold");
+    }, Object.create(null));
+    
+    // Positionnement spécifique pour le petit rond bleu
+    
+
+
+    mouseG.append('svg:rect') // append a rect to catch mouse movements on canvas
+        .attr('width', width) // can't catch mouse events on a g element
+        .attr('height', height)
+        .attr('fill', 'none')
+        .attr('pointer-events', 'all')
+        .on('mouseout', function() { // on mouse out hide line, circles and text
+            d3.select(".mouse-line")
+                .style("opacity", "0");
+            d3.selectAll(".mouse-per-line circle")
+                .style("opacity", "0");
+            d3.selectAll(".mouse-per-line text")
+                .style("opacity", "0");
+            d3.select("#tooltip-div")
+                .style("display", "none");
+        })
+        .on('mouseover', function() { // on mouse in show line, circles and text
             d3.select(".mouse-line")
                 .style("opacity", "1");
+            d3.selectAll(".mouse-per-line circle")
+                .style("opacity", "1");
+            d3.selectAll(".mouse-per-line text")
+                .style("opacity", "1");
+            d3.select("#tooltip-div")
+                .style("display", "block");
         })
-        .on("mouseout", function() {
-            tooltipCursor.style("display", "none");
-            tooltip.style("display", "none");
-        })
-        .on("mousemove", function(e){mousemove(e);});
+        .on('mousemove', function(e) { // mouse moving over canvas
+            var mouse = d3.pointer(e);
+            d3.select(".mouse-line")
+                .attr("d", function() {
+                    var d = "M" + mouse[0] + "," + height;
+                    d += " " + mouse[0] + "," + 0;
+                    return d;
+                });
 
+            d3.selectAll(".mouse-per-line")
+                .attr("transform", function(d, i) {
+                    var xDate = x.invert(mouse[0]),
+                    bisect = d3.bisector(function(d) { return d.date; }).right;
+                    idx = bisect(dataNested.values, xDate);
+            
+                    var beginning = 0,
+                    end = lines[i].getTotalLength(),
+                    target = null;
+
+                    while (true){
+                        target = Math.floor((beginning + end) / 2);
+                        pos = lines[i].getPointAtLength(target);
+                        if ((target === end || target === beginning) && pos.x !== mouse[0]) 
+                        {
+                            break;
+                        }
+                        if (pos.x > mouse[0])      end = target;
+                        else if (pos.x < mouse[0]) beginning = target;
+                        else break; //position found
+
+                    }
+
+                    closestElement = bisect(data, xDate, 1), 
+                        d0 = data[closestElement - 1],
+                        d1 = closestElement < data.length ? data[closestElement] : data[closestElement - 1],
+                        dx = xDate - d0.date > d1.date - xDate ? d1 : d0;
+
+                    d3.select('#tooltip-date')
+                            .text(dateFormat(dx.date));
+
+
+                    d3.select('#tooltip-tavg-' + d.key)
+                        .text("● " + d.key + "  :  " + y.invert(pos.y).toFixed(2) + " °C");
+
+
+                    let tootltipX = (mouse[0] > width - 170) 
+                        ? mouse[0] - 170 
+                        : mouse[0] + 2 * margin.left;
+
+                    let tootltipY = mouse[1] + 2 * margin.top;
+
+                    tooltip.style('display', 'block')
+                        .style('left', tootltipX + "px")
+                        .style('top', tootltipY + "px")
+
+                  
+                    return "translate(" + mouse[0] + "," + pos.y +")";
+                })
+        });
+
+
+    /*
     function mousemove(e) {
-        pointer = d3.pointer(e);
+        let pointer = d3.pointer(e);
         let x0 = x.invert(pointer[0]),
-            i = bisectDate(data, x0),
-            d0 = i > 0 ? data[i - 1] : data[i],
-            d1 = data[i],
-            d = x0 - d0.year > d1.year - x0 ? d1 : d0;
+            closestElement = bisectDate(data, x0, 1), //<-- use the bisector to search the array for the closest point to the left and find that point given our mouse position
+            d0 = data[closestElement - 1],
+            d1 = data[closestElement],
+            d = x0 - d0.date > d1.date - x0 ? d1 : d0;
 
         let polylineX = (pointer[0] > width - 200) ? pointer[0] - 200 : pointer[0] + margin.left;
         let tooltipText = (pointer[0] > width - 200) ? pointer[0] - 200 + 20 : pointer[0] + margin.left + 20;
@@ -342,10 +387,11 @@ function drawGraph(d)
         d3.select('#tooltip-tavg')
             .text(d.tavg + "°C");
     }
+    */
 
 }
 
-updateSortValues();
+query();
 
 /*
 @@ LISTENERS @@
