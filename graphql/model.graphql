@@ -21,6 +21,6 @@ type Query {
     Citys(city: [String]): [Item]
     Custom(city: String, country: String, date: String): [Item]
     Range(sortBy: [String], sortMethod: [Int], limit: Int, skip: Int, country: String, city: String): [Item]
-    Multiple(sortBy: [String], sortMethod: [Int], limit: Int, skip: Int, country: [String], city: [String]): [Item]
+    Multiple(sortBy: [String], sortMethod: [Int], country: [String], city: [String]): [Item]
     CountItem: Int
 }

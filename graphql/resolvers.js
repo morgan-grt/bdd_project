@@ -19,6 +19,7 @@ const findDocuments = function (db, col, query, callback)
     // Get the documents collection
     const collection = db.collection(col);
     // Find some documents
+    console.log(query)
     collection.find(query).toArray(function (err, docs) {
         assert.equal(err, null);
         callback(docs);
@@ -64,6 +65,17 @@ const paginationDocuments = function (db, col, query, sorting, limit, skip, call
     const collection = db.collection(col);
     // Find some documents
     collection.find(query).sort(sorting).limit(limit).skip(skip).toArray( function (err, docs) {
+        assert.equal(err, null);
+        callback(docs);
+    });
+}
+
+const sortedDocuments = function (db, col, query, sorting, callback) 
+{
+    // Get the documents collection
+    const collection = db.collection(col);
+    // Find some documents
+    collection.find({}).sort(sorting).toArray( function (err, docs) {
         assert.equal(err, null);
         callback(docs);
     });
@@ -234,20 +246,6 @@ const resolvers = {
             }
             else{sorting = {"date": 1};}
 
-            if ("limit" in args)
-            {
-                limit = args.limit;
-                delete args.limit;
-            }
-            else{limit = 10;}
-
-            if ("skip" in args)
-            {
-                skip = args.skip;
-                delete args.skip;
-            }
-            else{skip = 0;}
-
             if ("city" in args)
             {   
                 tmp = '{"city": {"$in": ['
@@ -260,11 +258,11 @@ const resolvers = {
                 query = JSON.parse(tmp);
             }
 
-            console.log(query, sorting, limit, skip);
+            console.log(query, sorting);
 
             return new Promise((resolve, reject) => {
                 const db = client.db(dbName);
-                paginationDocuments(db, 'weather', query, sorting, limit, skip, resolve);
+                sortedDocuments(db, 'weather', query, sorting, resolve);
             }).then(result => {
                 return result
             });

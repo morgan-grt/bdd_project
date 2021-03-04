@@ -62,3 +62,20 @@
 .x line, .y line {
 	stroke-width: 0.3px;
 }
+
+.button-duration {
+	cursor: pointer;
+    border: 0;
+    padding: 2px;
+    background-color: transparent;
+    color: #fff;
+    border-radius: 8px;
+}
+
+.button-duration:hover {
+	background-color: rgb(33, 35, 36);
+}
+
+.duration-active{
+	background-color: rgb(33, 35, 36);
+}
