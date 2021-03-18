@@ -6,7 +6,7 @@ const { GraphQLDateTime } = require('graphql-iso-date')
 // Connection URL
 //const url = 'mongodb://root:example@mongodb:27017';
 //const url = 'mongodb://root:example@127.0.0.1:27017';
-const url = 'mongodb://root:example@172.18.0.2:27017';
+const url = 'mongodb://root:example@172.18.0.3:27017';
 
 // Database Name
 const dbName = 'weather_db';
@@ -75,7 +75,7 @@ const sortedDocuments = function (db, col, query, sorting, callback)
     // Get the documents collection
     const collection = db.collection(col);
     // Find some documents
-    collection.find({}).sort(sorting).toArray( function (err, docs) {
+    collection.find(query).sort(sorting).toArray( function (err, docs) {
         assert.equal(err, null);
         callback(docs);
     });

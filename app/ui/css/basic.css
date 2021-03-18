@@ -35,8 +35,6 @@
 	margin: auto;
 }
 
-
-
 .x.axis path {
 	display: none;
 }
@@ -78,4 +76,60 @@
 
 .duration-active{
 	background-color: rgb(33, 35, 36);
+}
+
+input[type="checkbox"] { position: absolute; opacity: 0; z-index: -1; }
+
+.round {
+  	position: relative;
+}
+
+.round label {
+	background-color: rgb(45, 46, 47);
+	border: 1px solid rgb(45, 46, 47);
+	border-radius: 50%;
+	cursor: pointer;
+	height: 24px;
+	left: 0;
+	position: absolute;
+	top: 0;
+	width: 24px;
+}
+
+.round label::after {
+	border: 2px solid rgb(45, 46, 47);
+	border-top: none;
+	border-right: none;
+	content: "";
+	height: 6px;
+	left: 5px;
+	opacity: 0;
+	position: absolute;
+	top: 6px;
+	transform: rotate(-45deg);
+	width: 12px;
+}
+
+.round label:hover {
+  	background-color: rgb(33, 35, 36);
+}
+
+.round input[type="checkbox"] {
+  	visibility: hidden;
+}
+
+.round input[type="checkbox"]:checked + label:after {
+  	opacity: 1;
+}
+
+.map-circle, .legend-round, .td-city:hover {
+	cursor: pointer;
+}
+
+.td-city {
+	background-color: #844012;
+}
+
+.td-city:hover {
+	background-color: #3e1e08;
 }

@@ -6,6 +6,7 @@ let sortLimit = 10;
 let sortSkip = 0;
 let sortSkipNumber = 10;
 let buttonTableCountry;
+let defaultCities = ["CAEN", "PARIS", "BARCELONA", "NURNBERG", "SEVILLA", "BORDEAUX", "HAMBURG", "MADRID", "SAARBRUCKEN", "NICE"];
 
 let hostname = "192.168.1.15"
 let port = "4000"
@@ -64,6 +65,7 @@ function getAfter(newSkip = 10)
 
 function updateSortLimit(newLimit)
 {
+    resetGraph();
     sortLimit = newLimit;
     updateSortValues()
 }
@@ -153,7 +155,7 @@ function query()
 
     let query = `{Range(${sorting},${sortingMethod},`
         + `limit:${sortLimit},skip:${sortSkip})`
-        + `{date,country,city,prcp,snwd,tavg,tmax,tmin}}`;
+        + `{date,country,city,latitude,longitude,prcp,snwd,tavg,tmax,tmin}}`;
 
     d3.json(`http://${hostname}:${port}/?query=${query}`)
             .then(drawTable);
@@ -197,7 +199,7 @@ function createColumnClass(name)
 function drawTable(root) 
 {
     tableData = root.data.Range;
-    columns = ["country", "city", "date", "prcp", "snwd", "tavg", "tmax", "tmin"];
+    columns = ["country", "city", "date", "latitude", "longitude", "prcp", "snwd", "tavg", "tmax", "tmin"];
 
     d3.select("#content").selectAll("*").remove();
 
@@ -240,14 +242,36 @@ function drawTable(root)
         })
         .enter()
         .append("td")
-        .attr("class", "td-adjustment")
+        .attr("class", function(row) {
+            if (row.column == "city")
+            {
+                return "td-adjustment td-city";
+            }
+            else
+            {
+                return "td-adjustment";
+            }
+        })
+        .on("click", function(e, row) {
+            if (row.column == "city")
+            {
+                marginTopAdjustment = document.getElementById("content").offsetHeight 
+                    + document.getElementById("manage-button").offsetHeight;
+                legendYG = 65 + marginG.top + marginTopAdjustment;
+                let dataKeys = defaultCities.map(function(d){ return d.key })
+                let color = d3.scaleOrdinal(d3.schemeTableau10);
+                color.domain(dataKeys);
+                drawCityGraph(e, row.value, color(row.value));
+            }
+            else
+            {
+                return "td-adjustment";
+            }
+        })
         //.attr("style", "border: 1px solid black; padding: 2px 10px;")
         .html(function(d) { return d.value; });
 
 }
-
-updateSortValues();
-
 
 /*
 @@ LISTENERS @@
@@ -270,3 +294,14 @@ $('#content').on('click', '#btn-table-date', function(){
         buttonTableCountry = this;
         updateSortValues(2, this);
 });
+
+// set the dimensions and margins of the city graph
+const marginG = {top: 100, right: 200, bottom: 30, left: 50},
+    widthG = 920 - marginG.left - marginG.right,
+    heightG = 720 - marginG.top - marginG.bottom
+    marginTopAdjustment = document.getElementById("content").offsetHeight;
+
+let legendXG = marginG.left + 40,
+    legendYG = 75 + marginG.top + marginTopAdjustment;
+
+updateSortValues();

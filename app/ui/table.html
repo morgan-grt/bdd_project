@@ -27,6 +27,9 @@ and open the template in the editor.
                 </li><!--
                 --><li class="nav-item">
                     <a class="nav-link" href="/graph">Graphe</a>
+                </li><!--
+                --><li class="nav-item">
+                    <a class="nav-link" href="/map">Map</a>
                 </li>
             </ul>
         </header>
@@ -41,7 +44,7 @@ and open the template in the editor.
                 --><button class="btn btn-secondary" onclick="getAfter(100);">>></button><!--
                 --><button class="btn btn-secondary" onclick="getAfter(1000);">>>></button><!--
                 --><button class="btn btn-secondary" onclick="getAfterReset();">end</button><!--
-                --><select class="custom-select custom-select-adjustment" onChange="updateSortLimit(this.value);" id="number-to-show" name="number-to-show">
+                --><select class="custom-select custom-select-adjustment csa-custom" onChange="updateSortLimit(this.value);" id="number-to-show" name="number-to-show">
                   <option value="10">10</option>
                   <option value="20">20</option>
                   <option value="50">50</option>
@@ -49,10 +52,12 @@ and open the template in the editor.
                 </select><!--
                 --><input class="form-control custom-input" onChange="updateSortLimit(this.value);" type="text" name='number-to-show'>
             </div>
+            <div id="content-city"></div>
         </div>
         <footer id="footer">
         </footer>
     </body>
 
     <script type="text/javascript" src="js/table.js"></script>
+    <script type="text/javascript" src="js/draw.js"></script>
 </html>

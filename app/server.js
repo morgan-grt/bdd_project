@@ -10,6 +10,7 @@ app.use(express.static('ui'));
 app.use('/css', express.static(path.join(__dirname, 'ui/css')));
 app.use('/js', express.static(path.join(__dirname, 'ui/js')));
 app.use('/img', express.static(path.join(__dirname, 'ui/img')));
+app.use('/geojson', express.static(path.join(__dirname, 'ui/geojson')));
 
 // Set View's
 app.set('views', path.join(__dirname, "ui"));
@@ -27,6 +28,10 @@ app.get('/table', (req, res) => {
 
 app.get('/graph', (req, res) => {
 	res.render('graph');
+});
+
+app.get('/map', (req, res) => {
+	res.render('map');
 });
 
 app.listen(port, hostname, () => console.info(`🚀 App listening on port ${port}`));
